@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>MV 自动生成工坊</title>
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #0f1115;
+    color: #e6e6e6;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .box { text-align: center; }
+  .logo { font-size: 42px; margin-bottom: 18px; }
+  .title { font-size: 20px; font-weight: 600; letter-spacing: 1px; }
+  .sub { margin-top: 10px; color: #8b93a7; font-size: 13px; }
+  .spinner {
+    margin: 26px auto 0; width: 34px; height: 34px;
+    border: 3px solid rgba(255,255,255,0.12);
+    border-top-color: #4d9de0;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">🎬</div>
+    <div class="title">MV 自动生成工坊</div>
+    <div class="sub">正在启动内置服务，请稍候…</div>
+    <div class="spinner"></div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+name: verify
+
+on:
+  push:
+    branches: [main, master, dev]
+    paths:
+      - 'server/**'
+      - '*.mjs'
+      - 'package.json'
+  pull_request:
+    paths:
+      - 'server/**'
+      - '*.mjs'
+      - 'package.json'
+  workflow_dispatch:
+
+# 说明：本工作流用「完全离线」方式验证 JSON 自愈 + 故事大纲逻辑，不依赖外部 MERT / Agnes 服务。
+#   - verify:json      = 离线纯逻辑单测（tryTruncateRepair + parseJSON），无网络。
+#   - verify:story    = 离线单测全局故事大纲（beat sheet）：确定性编排无"走路"、地点多样、幕弧、prompt 注入。
+#   - verify:style    = 离线单测风格隔离：黑名单变体补全 + 空 styleIds 不清理漏洞修复（选 A 绝不出现 B/C/D，油画/电影变体不漏网）。
+#   - verify:selfheal  = 真实 dev server（直接读源码）+ mock Agnes + mock MERT 的端到端自愈（已含 storyPlan 断言）。
+# 仅在 ubuntu / macos 上跑（ffmpeg 易获取）；Windows 开发机已用 `npm run verify` 本地手动验证过。
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install ffmpeg (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: npm install (production deps only — dev server needs no electron/vite)
+        run: npm install --omit=dev --no-audit --no-fund
+
+      - name: Offline logic unit test (JSON self-heal)
+        run: npm run verify:json
+
+      - name: Offline unit test (story beat sheet)
+        run: npm run verify:story
+
+      - name: Offline unit test (style isolation / no cross-contamination)
+        run: npm run verify:style
+
+      - name: End-to-end self-heal verification (offline, mock Agnes + mock MERT)
+        run: npm run verify:selfheal

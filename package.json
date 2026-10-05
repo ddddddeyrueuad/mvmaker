@@ -1,0 +1,76 @@
+{
+  "name": "mv-maker",
+  "version": "1.1.45",
+  "private": true,
+  "description": "MV 自动生成工坊：音频切片 + mert 分析 + agnes 分镜/文生图/图生视频 + ffmpeg 合成",
+  "author": "MV Maker",
+  "main": "electron/main.js",
+  "scripts": {
+    "verify:json": "node test_json_repair.mjs",
+    "verify:story": "node test_story_plan.mjs",
+    "verify:style": "node test_style_contam.mjs",
+    "verify:chunk": "node test_story_chunk.mjs",
+    "verify:content": "node test_content_quality.mjs",
+    "verify:quote": "node test_quote_echo.mjs",
+    "verify:zh": "node test_ensure_zh.mjs",
+    "verify:selfheal": "node verify_selfheal_dev.mjs",
+    "verify": "npm run verify:json && npm run verify:story && npm run verify:chunk && npm run verify:content && npm run verify:quote && npm run verify:zh && npm run verify:style && npm run verify:selfheal"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  },
+  "build": {
+    "appId": "com.mvmaker.app",
+    "productName": "MVMaker",
+    "files": [
+      "**/*",
+      "!DIST/**",
+      "!server/uploads/**",
+      "!server/node_modules/**",
+      "!server/__pycache__/**",
+      "!server/.env",
+      "!temp clip/**",
+      "!**/*.mjs",
+      "!.workbuddy/**",
+      "!**/*.7z",
+      "!**/*.log",
+      "!test_audio.wav",
+      "!builder-debug.yml",
+      "!output/**",
+      "!release*/**",
+      "!b[0-9]*/**",
+      "!report/**",
+      "!resources/ffmpeg/**",
+      "!package-lock.json",
+      "!*.bat",
+      "!verify_pkg.js",
+      "!test_extract*.js",
+      "!_*/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/ffmpeg",
+        "to": "ffmpeg"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "vite": "^5.4.21"
+  }
+}
