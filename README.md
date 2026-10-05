@@ -1,5 +1,7 @@
 # MV 自动生成工坊（MVMaker）
 
+[English](README_EN.md) | 简体中文
+
 输入一首歌，自动产出一条 MV。桌面应用（Electron），全链路本地驱动，AI 环节走 Agnes OpenAI 兼容网关。
 
 音频切片 → MERT 情绪分析 → 分镜大纲 → 文生图 → 图生视频 → ffmpeg 合成
@@ -7,12 +9,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.1.45-blue" alt="version">
   <img src="https://img.shields.io/badge/platform-Windows%20x64-lightgrey" alt="platform">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
 </p>
 
 ## 下载
 
-最新版安装包（206 MB，NSIS one-click，per-user 安装免管理员）：
+最新版安装包（205 MB，NSIS one-click，per-user 安装免管理员）：
 
 **[Releases · v1.1.45](https://github.com/ddddddeyrueuad/mvmaker/releases/latest)**
 
@@ -43,6 +44,7 @@ AGNES_API_KEY=your-key-here
 # 1. 安装依赖
 npm install
 npm --prefix server install
+npm --prefix client install
 
 # 2. 配置（见上）
 cp server/.env.example server/.env
@@ -50,12 +52,13 @@ cp server/.env.example server/.env
 # 3. 离线回归测试（不依赖外部服务）
 npm run verify
 
-# 4. 开发模式
-npm run dev          # 启动后端 3001
-npm --prefix client run dev   # 启动前端 5173
+# 4. 开发模式（两个终端）
+npm --prefix server run dev      # 后端 :3001（node --watch 热重启）
+npm --prefix client run dev      # 前端 :5173（/api 与 /files 代理到 :3001）
 
-# 5. 打包
-npm run build        # 产物在 release/
+# 5. 打包（需先把 ffmpeg 放入 resources/ffmpeg/）
+npx electron-builder --win --publish never
+# 产物在 release/
 ```
 
 ## 架构
@@ -74,12 +77,12 @@ electron/        主进程、server 运行时自解压
 
 | 服务 | 职责 |
 |---|---|
-| `llm.js` | 分镜大纲、镜头提示词、中文补全（带自愈重试） |
+| `llm.js` | Agnes chat 客户端、提示词构建、中文补全（带自愈重试） |
 | `mert.js` | 本地情绪/能量/亮度/语速分析 → 视觉映射 |
 | `t2i.js` | 文生图，含 content-policy 净化与重试 |
 | `i2v.js` | 图生视频，两阶段异步轮询 |
 | `compose.js` | ffmpeg 合成 |
-| `storyboard.js` | 大纲编排、人物场景配额、连续性锁定 |
+| `storyboard.js` | 分块大纲生成（CHUNK=10）、镜头提示词、人物场景配额、连续性锁定、JSON 自愈链 |
 | `styles.js` | 风格库与跨风格隔离 |
 | `camera.js` / `mapping.js` | 运镜与景别决策 |
 
@@ -104,11 +107,11 @@ CI 配置见 `.github/workflows/verify.yml`，在 Ubuntu / macOS 上跑。
 
 - **分块大纲**：CHUNK=10 逐块生成，规避推理模型大输出退化导致的空内容
 - **JSON 自愈链**：截断修复 → 裸引号转义 → 回声短路检测；多轮差异化重生成（低温 + json 约束 / 高温 + 纯文本）打破回声循环
-- **i2v 两阶段**：`task_id` → 轮询 → `video_id` → 取下载地址（网关完成响应不直接给 URL）
+- **i2v 两阶段**：提交后拿 `task_id`（`task_xxx`，短）轮询 `GET /v1/videos/{task_id}`（无查询限流）；完成响应**只有 `video_id` 不含下载链接**，再用 `video_id`（`video_xxx`，长 base64）查 `GET /agnesapi?video_id=` 取 mp4 地址（有 429 限流，仅终态查一次）
 - **风格隔离**：选定风格后剥离其余风格特征词，避免风格污染
 - **人物配额**：按段落分配主角 / 双人 / 纯景比例（纯景只落在有风景信号的段落）
 - **连续性锁定**：角色描述、服装、主角锁定行贯穿全片
 
 ## 免责声明
 
-本项目为个人作品，仅供学习交流。使用者需自备 API Key 并遵守所用服务商的条款；生成内容的版权与合规责任由使用者自行承担。
+本项目为个人作品，仅供学习交流，未附开源许可证 —— 默认保留全部权利。使用者需自备 API Key 并遵守所用服务商的条款；生成内容的版权与合规责任由使用者自行承担。
